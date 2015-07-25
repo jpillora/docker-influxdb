@@ -6,53 +6,57 @@ An InfluxDB 0.9.2 Docker image
 
 ```
 $ docker pull quay.io/jpillora/influxdb:latest
+# create your config.toml (see below)
+$ nano /opt/config.toml
+# prepare your data directory
 $ mkdir -p /opt/influxdb/
+# run it in the background
 $ docker run \
-	--rm \
+	-d \
 	--name influxdb \
-	-p 8083:8083 \
-	-p 8086:8086 \
+	-p 8083:8083  -p 8086:8086  -p 8088:8088 \
 	-v /opt/influxdb/:/root/.influxdb/ \
-	# -v my-config.toml:/etc/influxdb/config.toml \
-	quay.io/jpillora/influxdb:latest \
-		--hostname <peer-reachable-host/ip> \
-		# --config /etc/influxdb/config.toml \
-		# --join http://<another-peer-reachable-host/ip>:8086
+	-v /opt/config.toml:/etc/influxdb/config.toml \
+	quay.io/jpillora/influxdb:latest
 ```
 
-**Note: Before use, remove unused commented parameters**
+**Single-host `config.toml`**
 
-See default configuration:
+You can either, remove the volume binding to `/etc/influxdb/config.toml` and use the built-in default config or you can remove `peers` and `replication` from the configuration below.
+
+**Clustered `config.toml`**
+
+* You **must** set the `hostname` to a reachable address by other peers
+* You **must** set **three** `peer`s (including the above `<hostname>:8088`)
 
 ``` toml
 reporting-disabled = false
 
 [meta]
   dir = "/root/.influxdb/meta"
-  hostname = "localhost"
+  hostname = "<hostname>"
   bind-address = ":8088"
   retention-autocreate = true
   election-timeout = "1s"
   heartbeat-timeout = "1s"
   leader-lease-timeout = "500ms"
   commit-timeout = "50ms"
+  peers = ["<hostname>:8088", "<another-hostname>:8088", "<and-another-hostname>:8088"]
 
 [data]
-  dir = "/root/.influxdb/root"
+  dir = "/root/.influxdb/data"
   max-wal-size = 104857600
   wal-flush-interval = "10m0s"
   wal-partition-flush-delay = "2s"
-  retention-auto-create = true
-  retention-check-enabled = true
-  retention-check-period = "10m0s"
-  retention-create-period = "45m0s"
 
 [cluster]
+  write-timeout = "5s"
   shard-writer-timeout = "5s"
 
 [retention]
   enabled = true
   check-interval = "10m0s"
+  replication = 3
 
 [shard-precreation]
   enabled = true
@@ -62,6 +66,8 @@ reporting-disabled = false
 [admin]
   enabled = true
   bind-address = ":8083"
+  https-enabled = false
+  https-certificate = "/etc/ssl/influxdb.pem"
 
 [http]
   enabled = true
@@ -70,6 +76,8 @@ reporting-disabled = false
   log-enabled = true
   write-tracing = false
   pprof-enabled = false
+  https-enabled = false
+  https-certificate = "/etc/ssl/influxdb.pem"
 
 [[graphite]]
   bind-address = ":2003"
@@ -122,6 +130,7 @@ reporting-disabled = false
   max-age = "168h0m0s"
   retry-rate-limit = 0
   retry-interval = "1s"
+
 ```
 
 #### MIT License

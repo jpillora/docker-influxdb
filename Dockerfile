@@ -10,7 +10,9 @@ RUN curl -s -o /tmp/influxdb_latest_amd64.deb https://s3.amazonaws.com/influxdb/
   rm -rf /var/lib/apt/lists/*
 #default data directory
 RUN mkdir /root/.influxdb
-#ports ADMIN, API
-EXPOSE 8083   8086
+#default single-host config
+ADD default-config.toml /etc/influxdb/config.toml
+#ports ADMIN API RAFT
+EXPOSE 8083 8086 8088
 
-ENTRYPOINT ["/opt/influxdb/influxd"]
+CMD ["/opt/influxdb/influxd","run","-config","/etc/influxdb/config.toml"]
