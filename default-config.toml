@@ -71,7 +71,7 @@ reporting-disabled = false
   retention-policy = ""
   consistency-level = "one"
 
-[udp]
+[[udp]]
   enabled = false
   bind-address = ""
   database = ""
