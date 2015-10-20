@@ -14,5 +14,5 @@ RUN mkdir /root/.influxdb
 ADD default-config.toml /etc/influxdb/config.toml
 #ports ADMIN API RAFT
 EXPOSE 8083 8086 8088
-
-CMD ["/opt/influxdb/influxd","run","-config","/etc/influxdb/config.toml"]
+#allow force -config param, though allow image user to provide others
+ENTRYPOINT ["/opt/influxdb/influxd","run","-config","/etc/influxdb/config.toml"]
